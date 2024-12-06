@@ -7,7 +7,7 @@ app.use(express.json()); // Hỗ trợ parse JSON
 
 // Kết nối MongoDB
 mongoose.connect(
-  "mongodb://localhost:27017/iot_alarm_db", // Thay URL bằng MongoDB cục bộ hoặc Atlas
+  "mongodb://10.14.19.143:27017/iot_alarm_db", // Thay localhost bằng địa chỉ IP của máy
   { useNewUrlParser: true, useUnifiedTopology: true }
 );
 
