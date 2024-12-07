@@ -2,13 +2,19 @@ const express = require("express");
 const mongoose = require("mongoose");
 const alarmRoutes = require("./routes/alarmRoutes");
 
+
 const app = express();
 app.use(express.json()); // Hỗ trợ parse JSON
 
 // Kết nối MongoDB
 mongoose.connect(
-  "mongodb://10.14.19.143:27017/iot_alarm_db", // Thay localhost bằng địa chỉ IP của máy
-  { useNewUrlParser: true, useUnifiedTopology: true }
+  "mongodb://10.134.128.147:27017/iot_alarm_db",
+  { 
+    useNewUrlParser: true, 
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 2000, 
+    socketTimeoutMS: 2000
+  }
 );
 
 const db = mongoose.connection;

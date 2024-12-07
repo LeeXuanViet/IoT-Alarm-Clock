@@ -1,35 +1,6 @@
 const Alarm = require("../models/alarm");
 const { sendCommand } = require("../mqtt/mqttClient");  // Đảm bảo đã có MQTT Client để gửi lệnh
 
-// Kiểm tra và xử lý báo thức
-const checkAndTriggerAlarm = async () => {
-  const now = new Date();
-  const alarms = await Alarm.find({ isUsed: true });  // Lấy tất cả báo thức đang bật
-
-  alarms.forEach((alarm) => {
-    if (
-      alarm.alarmTime <= now && // Nếu thời gian báo thức đã đến
-      alarm.startDate <= now && // Nếu ngày bắt đầu báo thức đã qua
-      (!alarm.repeat || alarm.repeat === "None" || alarm.repeat === now.getDay()) // Kiểm tra chu kỳ lặp lại
-    ) {
-      console.log(`Kích hoạt báo thức ID: ${alarm.id}`);
-
-      // Gửi lệnh phát nhạc qua MQTT
-      sendCommand("playMusic", { sound: alarm.sound, volume: alarm.volume });
-
-      // Gửi lệnh bật đèn nháy nếu có
-      if (alarm.lightBlink) {
-        sendCommand("lightBlink", { status: true });
-      }
-
-      // Tắt báo thức sau khi kích hoạt nếu không có repeat
-      if (!alarm.repeat || alarm.repeat === "None") {
-        alarm.isUsed = false;
-        alarm.save();  // Lưu lại trạng thái báo thức đã tắt
-      }
-    }
-  });
-};
 
 // Lấy danh sách báo thức
 const getAllAlarms = async (req, res) => {
@@ -97,5 +68,4 @@ module.exports = {
   createAlarm,
   updateAlarm,
   deleteAlarm,
-  checkAndTriggerAlarm,
 };
