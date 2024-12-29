@@ -8,12 +8,12 @@ app.use(express.json()); // Hỗ trợ parse JSON
 
 // Kết nối MongoDB
 mongoose.connect(
-  "mongodb://10.134.128.147:27017/iot_alarm_db",
+  "mongodb://localhost:27017/iot_alarm_db",
   { 
     useNewUrlParser: true, 
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 2000, 
-    socketTimeoutMS: 2000
+    useUnifiedTopology: true
+    // serverSelectionTimeoutMS: 2000, 
+    // socketTimeoutMS: 2000
   }
 );
 

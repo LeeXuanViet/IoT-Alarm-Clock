@@ -27,7 +27,7 @@ mqttClient.on("message", async (topic, message) => {
       // Parse thời gian thực từ ESP32
       const espTime = JSON.parse(message.toString());
       const currentDay = espTime.day; // Lấy thứ hiện tại (Sat, Sun, ...)
-      const currentTime = espTime.time.substring(0, 5); // Lấy giờ:phút (HH:mm)
+      const currentTime = formatTime(espTime.time); // Định dạng thời gian chuẩn HH:mm:ss
 
       console.log(`Thời gian thực nhận được: ${currentDay}, ${espTime.time}, ${espTime.date}`);
 
@@ -36,13 +36,13 @@ mqttClient.on("message", async (topic, message) => {
       alarms.forEach((alarm) => {
         const alarmTime = new Date(alarm.alarmTime);
         const alarmDay = getDayOfWeek(alarmTime.getDay()); // Chuyển thứ từ số sang tên
-        const alarmTimeStr = alarmTime.toISOString().substring(11, 16); // Lấy giờ:phút từ alarmTime
+        const alarmTimeStr = formatTime(alarmTime.toISOString().substring(11, 19)); // Lấy giờ:phút:giây từ alarmTime
 
         console.log(`Kiểm tra báo thức ID ${alarm.id}: ${alarmTimeStr}, ${alarmDay}, repeat: ${alarm.repeat}`);
 
-        // So sánh giờ, phút và thứ
+        // So sánh giờ, phút và giây
         if (
-          currentTime === alarmTimeStr && // Giờ:phút trùng khớp
+          currentTime === alarmTimeStr && // Giờ:phút:giây trùng khớp
           (alarm.repeat === "Daily" || alarm.repeat.includes(currentDay)) // Kiểm tra lặp
         ) {
           console.log(`Kích hoạt báo thức ID: ${alarm.id}`);
@@ -61,6 +61,20 @@ mqttClient.on("message", async (topic, message) => {
             alarm.save(); // Lưu trạng thái đã tắt
           }
         }
+        else if (currentTime === alarmTimeStr && alarm.repeat === "None" ) {
+          console.log(`Kích hoạt báo thức ID: ${alarm.id}`);
+
+          // Gửi lệnh phát nhạc
+          sendCommand("playMusic", { sound: alarm.sound, volume: alarm.volume });
+
+          // Gửi lệnh bật đèn nhấp nháy nếu có
+          if (alarm.lightBlink) {
+            sendCommand("lightBlink", { status: true });
+          }
+          // Tắt báo thức nếu không có repeat
+            alarm.isUsed = false;
+            alarm.save(); // Lưu trạng thái đã tắt 
+        }
       });
     } catch (err) {
       console.error("Lỗi xử lý tin nhắn từ esp32/ds1307:", err.message);
@@ -72,6 +86,17 @@ mqttClient.on("message", async (topic, message) => {
 const getDayOfWeek = (dayNumber) => {
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   return days[dayNumber];
+};
+
+// Hàm chuẩn hóa thời gian (giờ:phút:giây) để có 2 chữ số cho phút và giây
+const formatTime = (timeStr) => {
+  const [hour, minute, second] = timeStr.split(":");
+  return `${padZero(hour)}:${padZero(minute)}:${padZero(second)}`;
+};
+
+// Hàm thêm số 0 vào phút hoặc giây nếu cần thiết
+const padZero = (value) => {
+  return value.length === 1 ? "0" + value : value;
 };
 
 // Gửi lệnh đến phần cứng qua MQTT
